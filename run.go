@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -32,25 +31,26 @@ func startHTTPServer(prod bool) {
 	http.ListenAndServe(":5000", router)
 }
 
-func listenStop(close chan bool) {
+func listenStop(close chan bool, mode bool) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	for _ = range c {
 		log.Print("Shutdowning HTTP server on port :5000")
-		log.Print("Shutdowning Webpack on port :5001")
+		if mode == false {
+			log.Print("Shutdowning Webpack on port :5001")
+		}
 		close <- true
 	}
 }
 
 func main() {
+	// Production mode
+	prod := false
 	// Listen for CTRL+C
 	close := make(chan bool)
-	go listenStop(close)
-	// Parsing production flag
-	prod := flag.Bool("P", false, "Production")
-	flag.Parse()
+	go listenStop(close, prod)
 	// Run prod or dev mode
-	if *prod == true {
+	if prod == true {
 		go startHTTPServer(true)
 	} else {
 		go startHTTPServer(false)

@@ -18,9 +18,12 @@ var upgrader = websocket.Upgrader{
 }
 
 type point struct {
-	ID  string  `json:"id"`
-	Lat float64 `json:"lat"`
-	Lng float64 `json:"lng"`
+	ID    string  `json:"id"`
+	Lat   float64 `json:"lat"`
+	Lng   float64 `json:"lng"`
+	Total int     `json:"total"`
+	Link  string  `json:"link"`
+	Text  string  `json:"text"`
 }
 
 // WebsocketHandler -- Connect with client
@@ -67,7 +70,7 @@ func getPhotos(username string, conn *websocket.Conn, msgType int) {
 	}
 	points := make(chan point)
 	for i := 0; i < len(photos); i++ {
-		go generatePoint(photos[i].(map[string]interface{}), points)
+		go generatePoint(photos[i].(map[string]interface{}), points, len(photos))
 	}
 	var found []point
 	for p := range points {
@@ -93,7 +96,7 @@ func getPhotos(username string, conn *websocket.Conn, msgType int) {
 	}
 }
 
-func generatePoint(photo map[string]interface{}, points chan point) {
+func generatePoint(photo map[string]interface{}, points chan point, total int) {
 	url := fmt.Sprintf("https://www.instagram.com/p/%s/", photo["code"].(string))
 	resp, _ := http.Get(url)
 	bytes, _ := ioutil.ReadAll(resp.Body)
@@ -108,5 +111,7 @@ func generatePoint(photo map[string]interface{}, points chan point) {
 	rLat := regexp.MustCompile(`latitude" content="(.*)"`)
 	lat, _ := strconv.ParseFloat(rLat.FindAllStringSubmatch(txt, -1)[0][1], 64)
 	long, _ := strconv.ParseFloat(rLong.FindAllStringSubmatch(txt, -1)[0][1], 64)
-	points <- point{photo["code"].(string), lat, long}
+	link := photo["images"].(map[string]interface{})["standard_resolution"].(map[string]interface{})["url"].(string)
+	text := photo["caption"].(map[string]interface{})["text"].(string)
+	points <- point{photo["code"].(string), lat, long, total, link, text}
 }
