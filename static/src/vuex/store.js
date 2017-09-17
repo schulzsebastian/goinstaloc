@@ -15,7 +15,7 @@ const mutations = {
   addPhoto (state, photo) {
     state.photos.push(photo)
   },
-  clearPhotos (state, id) {
+  clearPhotos (state) {
     state.photos = []
   }
 }

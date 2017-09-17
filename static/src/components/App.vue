@@ -9,7 +9,7 @@
         <ul class="navbar-nav mr-auto">
         </ul>
         <search-box
-          :searching="searched"
+          :searching="searching"
           @search="searchProfile">
         </search-box>
       </div>
@@ -26,7 +26,7 @@ import InstagramMap from './InstagramMap.vue'
 export default {
   data() {
     return {
-      searched: false
+      searching: false
     }
   },
   components: {
@@ -35,15 +35,19 @@ export default {
   },
   methods: {
     searchProfile(nickname) {
+      this.$store.commit('clearPhotos')
       let url = location.host
       if(location.host == "localhost:5001") url = "localhost:5000"
       const ws = new WebSocket(`ws://${url}/websocket`)
       ws.onopen = () => {
-        this.searched = true
+        this.searching = true
         ws.send(nickname)
       }
       ws.onmessage = evt => {
-        if(evt.data == "end") ws.close()
+        if(evt.data == "end") {
+          ws.close()
+          this.searching = false
+        }
         else this.$store.commit('addPhoto', JSON.parse(evt.data))
       }
     }

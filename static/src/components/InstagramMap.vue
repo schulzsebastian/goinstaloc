@@ -1,7 +1,7 @@
 <template>
   <div id="instagram-map" style="height:99.5%; width: 100%">
     <div class="progress" v-show="loading">
-      <div id="pb" class="progress-bar bg-danger" role="progressbar" style="width: 0%; height: 0.5%;"></div>
+      <div id="pb" class="progress-bar" role="progressbar" style="width: 0%; height: 0%; background-color: #28a745"></div>
     </div>
   </div>
 </template>
@@ -38,15 +38,24 @@ export default {
   },
   watch: {
     photos(after, before) {
+      // Adding new photos
       if(after.length > before.length) {
+        document.getElementById('pb').style.height = '0.5%'
         let toAdd = after.filter(p => {
           return before.map(b => b.id).indexOf(p.id) < 0
         })[0]
         this.addPoint(toAdd)
         document.getElementById('pb').style.width = `${Math.round(this.photos.length/toAdd.total*100)}%`
-        if(this.photos.length == toAdd.total) this.fitToLayer()
+        if(this.photos.length == toAdd.total) {
+          this.fitToLayer()
+          setTimeout(() => {
+            document.getElementById('pb').style.height = '0%'
+            document.getElementById('pb').style.width = `0%`
+          }, 1000)
+        }
       }
-      //TODO: prograssbar
+      // Clear photos event
+      else if(after.length < before.length) this.clearMap()
     }
   },
   mounted() {
