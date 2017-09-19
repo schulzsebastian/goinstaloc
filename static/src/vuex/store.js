@@ -4,11 +4,13 @@ import Vuex from 'vuex'
 Vue.use(Vuex)
 
 const state = {
-  photos: []
+  photos: [],
+  scanned: []
 }
 
 const getters = {
-  photos: state => state.photos
+  photos: state => state.photos,
+  scanned: state => state.scanned
 }
 
 const mutations = {
@@ -17,6 +19,12 @@ const mutations = {
   },
   clearPhotos (state) {
     state.photos = []
+  },
+  addScanned (state, scanned) {
+    state.scanned.push(scanned)
+  },
+  clearScanned (state) {
+    state.scanned = []
   }
 }
 

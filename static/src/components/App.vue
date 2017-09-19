@@ -36,6 +36,7 @@ export default {
   methods: {
     searchProfile(nickname) {
       this.$store.commit('clearPhotos')
+      this.$store.commit('clearScanned')
       let url = location.host
       if(location.host == "localhost:5001") url = "localhost:5000"
       const ws = new WebSocket(`ws://${url}/websocket`)
@@ -48,6 +49,12 @@ export default {
           ws.close()
           this.searching = false
         }
+        else if(evt.data == "error") {
+          ws.close()
+          alert('User does not exists or profile is private')
+          this.searching = false
+        }
+        else if(parseInt(evt.data)) this.$store.commit('addScanned', parseInt(evt.data))
         else this.$store.commit('addPhoto', JSON.parse(evt.data))
       }
     }

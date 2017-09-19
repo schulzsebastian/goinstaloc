@@ -46,20 +46,30 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 func getPhotos(username string, conn *websocket.Conn, msgType int) {
 	var photos []interface{}
 	param := ""
+	url := fmt.Sprintf("https://www.instagram.com/%s", username)
+	resp, _ := http.Get(url)
+	bytes, _ := ioutil.ReadAll(resp.Body)
+	txt := string(bytes)
+	r := regexp.MustCompile(`}], "count": (\d*),`)
+	scanned := r.FindAllStringSubmatch(txt, -1)[0][1]
 	for {
 		var data map[string]interface{}
-		url := fmt.Sprintf("https://www.instagram.com/%s/media%s", username, param)
+		url = fmt.Sprintf("https://www.instagram.com/%s/media%s", username, param)
 		resp, _ := http.Get(url)
 		bytes, _ := ioutil.ReadAll(resp.Body)
 		_ = json.Unmarshal([]byte(bytes), &data)
 		items := data["items"].([]interface{})
+		if len(items) == 0 {
+			conn.WriteMessage(msgType, []byte(string("error")))
+			return
+		}
 		for i := 0; i < len(items); i++ {
+			conn.WriteMessage(msgType, []byte(string(scanned)))
 			_, err := items[i].(map[string]interface{})["location"].(map[string]interface{})
 			if err != false {
 				photos = append(photos, items[i])
 			}
 		}
-
 		findMore := data["more_available"].(bool)
 		if findMore != true {
 			break
